@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>Can a neural network forecast a flood?</title>
+	<meta name="description" content="A CNN-LSTM project on four simulated floods: Australia, the UK, Pakistan and Mozambique. Deep Learning CA3, Anhad Mahajan and Aman Sumeet Saxena." />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="style.css" />
+	<style>
+		#scrolly {
+			position: relative;
+			display: -webkit-box;
+			display: -ms-flexbox;
+			display: flex;
+			background-color: #f3f3f3;
+			padding: 1rem;
+		}
+
+		#scrolly>* {
+			-webkit-box-flex: 1;
+			-ms-flex: 1;
+			flex: 1;
+		}
+
+		article {
+			position: relative;
+			padding: 0 1rem;
+			max-width: 24rem;
+		}
+
+		figure {
+			position: -webkit-sticky;
+			position: sticky;
+			width: 100%;
+			margin: 0;
+			-webkit-transform: translate3d(0, 0, 0);
+			-moz-transform: translate3d(0, 0, 0);
+			transform: translate3d(0, 0, 0);
+			background-color: #ffffff;
+			z-index: 0;
+		}
+
+		figure img {
+			width: 100%;
+			height: calc(100% - 3rem);
+			object-fit: contain;
+			transition: opacity 0.25s;
+		}
+
+		figure figcaption {
+			font-size: 0.95rem;
+			color: #555;
+			text-align: center;
+			padding: 0.5rem 1rem;
+		}
+
+
+		.step {
+			margin: 0 auto 2rem auto;
+			background-color: #ffffff;
+			color: #222;
+			border-radius: 6px;
+			opacity: 0.45;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
+
+		.step:last-child {
+			margin-bottom: 0;
+		}
+
+		.step.is-active {
+			opacity: 1;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+		}
+
+		.step h2, .step h3 {
+			margin: 0;
+			padding: 1rem 1rem 0;
+		}
+
+		.step.part {
+			background-color: #1f3b57;
+			color: #fff;
+		}
+
+		#outro {
+			max-width: 44rem;
+			margin: 4rem auto;
+			padding: 0 1rem;
+			height: auto;
+		}
+
+		body {
+			background-color: #fafafa;
+			color: #222;
+			color-scheme: light;
+		}
+
+		#intro {
+			margin-top: 4rem;
+		}
+
+		.intro__hed {
+			color: #1f3b57;
+			font-weight: 600;
+		}
+
+		.intro__dek {
+			color: #444;
+			margin-bottom: 1rem;
+		}
+
+		.credits, .intro__note {
+			color: #666;
+			font-size: 0.8em;
+		}
+
+		#outro h2 {
+			color: #1f3b57;
+			font-weight: 600;
+			margin-bottom: 1rem;
+		}
+
+		#outro li {
+			margin-bottom: 0.8rem;
+			line-height: 1.5;
+		}
+
+		@media (max-width: 760px) {
+			#scrolly { flex-direction: column-reverse; }
+			article { max-width: none; }
+			figure { top: 0 !important; height: 45vh !important; }
+		}
+
+		.step p {
+			text-align: left;
+			padding: 0.5rem 1rem 1rem;
+			font-size: 1.05rem;
+			line-height: 1.5;
+		}
+	</style>
+</head>
+
+<body>
+	
+	<main>
+		
+		<section id="intro">
+			<h1 class="intro__hed">Can a neural network forecast a flood?</h1>
+			<p class="intro__dek">
+				A CNN-LSTM project on four simulated floods: Australia, the UK, Pakistan and Mozambique. Deep Learning CA3, Anhad Mahajan and Aman Sumeet Saxena.</p>
+			<p class="intro__note">Scroll down. The picture on the right changes as you read.
+			</p>
+		</section>
+
+		<section id="scrolly">
+			<article>
+				<div class="step part" data-img="images/flood_growth_australia.png" data-caption="">
+					<h2>Part 1: The floods</h2>
+				</div>
+				<div class="step" data-img="images/flood_growth_australia.png" data-caption="The Australia flood over ten days. Grey means dry, blue means water.">
+					<h3>A flood, 30 minutes at a time</h3>
+					<p>We worked with FloodCastBench, a public dataset of four real floods that were re-created in a computer simulation. Each flood is a long series of water-depth maps, one every 30 minutes. Our goal was to look at the last few maps and guess the next one.</p>
+				</div>
+				<div class="step" data-img="images/region_australia.png" data-caption="Ground height, land cover and water at the start of the Australia flood.">
+					<h3>Australia, February 2022</h3>
+					<p>Every map is a grid of squares. For each square we know the ground height, what covers the ground (crops, trees, buildings, water) and how deep the water is. Australia is the biggest map, over a million squares of 30 m each.</p>
+				</div>
+				<div class="step" data-img="images/region_uk.png" data-caption="The UK map. The river winds through farmland and town.">
+					<h3>UK, December 2015</h3>
+					<p>The UK flood is much smaller and only lasts three days. We never trained on it. It was kept aside as a flood the model had never seen.</p>
+				</div>
+				<div class="step" data-img="images/region_pakistan.png" data-caption="The Pakistan map, 480 m squares.">
+					<h3>Pakistan, August 2022</h3>
+					<p>Pakistan is huge, so its squares are 480 m wide instead of 30 m. Water moves across a 480 m square very differently, so it got its own model.</p>
+				</div>
+				<div class="step" data-img="images/region_mozambique.png" data-caption="The Mozambique map. It starts almost dry.">
+					<h3>Mozambique, March 2019</h3>
+					<p>Mozambique (Cyclone Idai) is the second never-seen flood. The 480 m model learned on Pakistan and was tested here.</p>
+				</div>
+				<div class="step" data-img="images/rain_and_flood_australia.png" data-caption="Australia: rain (top), average water depth (middle) and area under water (bottom).">
+					<h3>Rain drives the flood</h3>
+					<p>Over the ten days, the rain comes in bursts and the water keeps building up. Most of the flooding happens after the heavy rain in the second half.</p>
+				</div>
+				<div class="step" data-img="images/rain_timing_check.png" data-caption="The rain stamped at the same time as a map explains the water that appears in the next 30 minutes.">
+					<h3>Which rain belongs to which map?</h3>
+					<p>Before training anything we checked when each rain file falls. Each file holds the rain of the 30 minutes after its map. This mattered: the model is only allowed to see rain that has already fallen, never future rain.</p>
+				</div>
+				<div class="step" data-img="images/layer_alignment_test.png" data-caption="Two independent tests agree on the position we used.">
+					<h3>Do the layers line up?</h3>
+					<p>The rain and ground files come on a finer grid than some depth maps. We moved them around by a few squares and checked where rivers and valleys matched the water best. A shifted layer would quietly teach the model wrong things.</p>
+				</div>
+				<div class="step" data-img="images/all_layers_australia.png" data-caption="Australia after 181 hours, all four layers.">
+					<h3>Everything on one grid</h3>
+					<p>After this step every layer describes exactly the same place: water depth, ground height, land cover and rain.</p>
+				</div>
+				<div class="step" data-img="images/water_balance_check.png" data-caption="Each dot is one 30-minute step. The red line is rise = rain x half an hour.">
+					<h3>Water in = rain in</h3>
+					<p>Over a whole map, the water rises by almost exactly the amount of rain that falls. The totals differ by at most about 5%, because a little water leaves at the edge of the map. We used this later as a physics check on our forecasts.</p>
+				</div>
+				<div class="step part" data-img="images/model_diagram.png" data-caption="">
+					<h2>Part 2: The model</h2>
+				</div>
+				<div class="step" data-img="images/model_diagram.png" data-caption="The forecaster has 62,833 numbers to learn.">
+					<h3>CNN + ConvLSTM</h3>
+					<p>The CNN layers look at each of the last four maps and pick out shapes: water edges, slopes, patches of rain. The ConvLSTM then reads the four maps in order and remembers how the water has been moving. The model predicts only the change in depth for the next 30 minutes.</p>
+				</div>
+				<div class="step" data-img="images/how_we_score.png" data-caption="Skill = 1 - (error of the forecast / error of copying the last map).">
+					<h3>How we score a forecast</h3>
+					<p>Over 30 minutes most of the map hardly changes, so just copying the last map is already a very good forecast. We score everything against that. A skill of 0 means no better than copying and 1 means perfect.</p>
+				</div>
+				<div class="step" data-img="images/whole_system.png" data-caption="Dashed arrows are Grad-CAM.">
+					<h3>The whole system</h3>
+					<p>Around the forecaster we built the parts the course asked for: a capsule network that rates how bad the flood will be, written rules that check its answer, a water-balance rule that checks the forecast, and Grad-CAM to show where the model looks.</p>
+				</div>
+				<div class="step part" data-img="images/model_a_skill.png" data-caption="">
+					<h2>Part 3: What happened</h2>
+				</div>
+				<div class="step" data-img="images/model_a_skill.png" data-caption="Skill of Model A, with and without the water-balance rule.">
+					<h3>Our first model beat copying...</h3>
+					<p>Model A beat copying the last map on three of the four tests, including both floods it had never seen. On the last part of the Australia flood it did worse than copying.</p>
+				</div>
+				<div class="step" data-img="images/model_a_error_over_time.png" data-caption="Grey is copying the last map, blue is Model A.">
+					<h3>...but only by a little</h3>
+					<p>At the busiest moments of the UK and Mozambique floods, Model A&#x27;s error is clearly below copying. At calm moments the lines meet.</p>
+				</div>
+				<div class="step" data-img="images/model_a_forecast_maps.png" data-caption="Blue means water rising, red means water falling.">
+					<h3>What the forecasts look like</h3>
+					<p>The predicted change follows the true change in the right places, along the UK river and the rain blocks in Pakistan, but it is weaker than the real thing.</p>
+				</div>
+				<div class="step" data-img="images/trend_vs_models.png" data-caption="Trend forecast, Model A and Model B on the four tests.">
+					<h3>A one-number formula did far better</h3>
+					<p>Then we tried a trend forecast: take the last map and keep the last 30-minute change going, slightly damped. It has no network at all and scored 0.91 to 0.99. Our second model, Model B, starts from this trend and learns a small correction. It matched the trend but did not beat it.</p>
+				</div>
+				<div class="step" data-img="images/error_over_time_with_trend.png" data-caption="Typical error at every step.">
+					<h3>Trend and Model B overlap</h3>
+					<p>Over the whole test period the trend forecast and Model B sit almost on top of each other, far below copying and Model A.</p>
+				</div>
+				<div class="step" data-img="images/error_maps_30m.png" data-caption="Australia (top) and UK (bottom). Purple is too much water, orange too little.">
+					<h3>Where the mistakes are (30 m)</h3>
+					<p>Model A&#x27;s errors show up along the rivers. Model B&#x27;s error map is almost blank at the same colour scale.</p>
+				</div>
+				<div class="step" data-img="images/error_maps_480m.png" data-caption="Pakistan (top) and Mozambique (bottom).">
+					<h3>Where the mistakes are (480 m)</h3>
+					<p>Same story for Pakistan and Mozambique.</p>
+				</div>
+				<div class="step" data-img="images/little_left.png" data-caption="Share of copying&#x27;s error left after the trend forecast.">
+					<h3>Not much left to improve</h3>
+					<p>After the trend forecast, only 1% to 9% of the error of copying is left. That is why Model B can&#x27;t add much at 30 minutes. A fair test of the LSTM&#x27;s memory needs longer forecasts, 6 to 24 hours ahead.</p>
+				</div>
+				<div class="step part" data-img="images/laptop_skill.png" data-caption="">
+					<h2>Part 4: A bigger study on a laptop</h2>
+				</div>
+				<div class="step" data-img="images/laptop_skill.png" data-caption="Skill on a flood the model never saw.">
+					<h3>Simple models get most of the way</h3>
+					<p>In a larger study of about 310 training runs, forecasting up to 2.5 hours ahead, a simple linear model of each square&#x27;s recent depths already scored 0.79 to 0.82. The best networks reached 0.81 to 0.87.</p>
+				</div>
+				<div class="step" data-img="images/memory_over_lead_time.png" data-caption="Australia to UK at 60 m.">
+					<h3>Does memory help?</h3>
+					<p>When both were trained for the same length, the ConvLSTM and a plain CNN scored the same. The ConvLSTM did lose skill more slowly as the forecast reached further ahead.</p>
+				</div>
+				<div class="step" data-img="images/what_models_use.png" data-caption="Local CNN on the UK flood.">
+					<h3>The models live on the recent depths</h3>
+					<p>Freeze the depth history and the skill drops to about zero. Remove the rain or the ground height and it barely moves.</p>
+				</div>
+				<div class="step" data-img="images/tuning.png" data-caption="Local CNN on the three experiments.">
+					<h3>What tuning changed</h3>
+					<p>A bigger batch with a higher learning rate made things slightly worse. Training longer helped a little. Anything under about 0.02 is within the noise from the random seed.</p>
+				</div>
+				<div class="step" data-img="images/predictions.png" data-caption="Orange means it held only in part.">
+					<h3>Six predictions, written down first</h3>
+					<p>Before the final runs we wrote down six predictions. Some held, some only partly, and one mostly failed.</p>
+				</div>
+				<div class="step" data-img="images/strict_split.png" data-caption="Skill when a block of time is hidden from training.">
+					<h3>Where models break</h3>
+					<p>When we hid a block of time from training, the plain CNN failed badly on Pakistan. Almost all its error came from six windows at the very start of the flood, which it had never seen. The ConvLSTM and the lookup table coped.</p>
+				</div>
+				<div class="step part" data-img="images/old_severity_label.png" data-caption="">
+					<h2>Part 5: How bad, and why</h2>
+				</div>
+				<div class="step" data-img="images/old_severity_label.png" data-caption="Red: tiles the old label calls severe. Blue: what is actually flooded.">
+					<h3>Fixing the severity label</h3>
+					<p>The first severity label used the deepest single square in a tile, so almost every tile came out &#x27;severe&#x27;. We replaced it with the share of normally dry land under more than 30 cm of water.</p>
+				</div>
+				<div class="step" data-img="images/capsule_confusion.png" data-caption="Rows are the true rating, columns the network&#x27;s answer.">
+					<h3>The capsule network</h3>
+					<p>A capsule network rates each tile as None, Minor, Moderate or Severe for 30 minutes ahead. It got 50% to 87% right. That sounds fine until you notice the rating in 30 minutes is almost the same as the rating now.</p>
+				</div>
+				<div class="step" data-img="images/rules_accuracy.png" data-caption="Capsule network alone, with the rules, and the rating read from the forecast map.">
+					<h3>Rules that check the network</h3>
+					<p>Three written rules check the capsule network and give a reason for every decision. They raised the accuracy in all four floods. Reading the rating straight from the forecast map was right about 99% of the time.</p>
+				</div>
+				<div class="step" data-img="images/grad_cam_forecaster.png" data-caption="Bright means important.">
+					<h3>Where the forecaster looks</h3>
+					<p>Grad-CAM colours the parts of the input that mattered most. For the forecaster the bright areas follow river channels, flood edges and rain blocks, the places where the water is actually changing.</p>
+				</div>
+				<div class="step" data-img="images/grad_cam_capsule.png" data-caption="The four most flooded tiles of the UK and Mozambique.">
+					<h3>Where the capsule network looks</h3>
+					<p>For the capsule network the heat maps were weak and changed between training runs, so we treat them as pictures, not proof.</p>
+				</div>
+			</article>
+
+			<figure>
+				<img src="images/flood_growth_australia.png" alt="">
+				<figcaption></figcaption>
+			</figure>
+		</section>
+
+		<section id="outro">
+			<h2>What we learned</h2>
+			<ul>
+				<li>At 30 minutes ahead, a simple trend forecast does almost all the work. Our second model matches it but doesn&#x27;t beat it.</li>
+				<li>Up to 2.5 hours ahead, a simple model of each square&#x27;s recent depths gets most of the way. The LSTM&#x27;s memory didn&#x27;t help at equal training.</li>
+				<li>The biggest lesson: always compare a model with simple forecasts. Our first model looked good until we did.</li>
+				<li>Next we want to forecast 6 to 24 hours ahead, where a trend should break down and memory could finally matter.</li>
+			</ul>
+			<p class="credits">Anhad Mahajan (PRN 24070126031) and Aman Sumeet Saxena (PRN 24070126030), AIML A2. Data: FloodCastBench (Xu et al., Scientific Data, 2025).</p>
+		</section>
+	</main>
+
+	<!-- <div class='debug'></div> -->
+	<script src="https://unpkg.com/d3@5.9.1/dist/d3.min.js"></script>
+	<script src="scrollama.min.js"></script>
+	<script>
+		// using d3 for convenience
+		var main = d3.select("main");
+		var scrolly = main.select("#scrolly");
+		var figure = scrolly.select("figure");
+		var article = scrolly.select("article");
+		var step = article.selectAll(".step");
+
+		// initialize the scrollama
+		var scroller = scrollama();
+
+		// generic window resize listener event
+		function handleResize() {
+			// 1. update height of step elements
+			var stepH = Math.floor(window.innerHeight * 0.75);
+			step.style("height", stepH + "px");
+
+			var figureHeight = window.innerHeight * 0.85;
+			var figureMarginTop = (window.innerHeight - figureHeight) / 2;
+
+			figure
+				.style("height", figureHeight + "px")
+				.style("top", figureMarginTop + "px");
+
+			// 3. tell scrollama to update new element dimensions
+			scroller.resize();
+		}
+
+		// scrollama event handlers
+		function handleStepEnter(response) {
+			console.log(response);
+			// response = { element, direction, index }
+
+			// add color to current step only
+			step.classed("is-active", function (d, i) {
+				return i === response.index;
+			});
+
+			// update graphic based on step
+			var el = d3.select(response.element);
+			figure.select("img").attr("src", el.attr("data-img"));
+			figure.select("figcaption").text(el.attr("data-caption"));
+		}
+
+		function init() {
+
+			// 1. force a resize on load to ensure proper dimensions are sent to scrollama
+			handleResize();
+
+			// 2. setup the scroller passing options
+			// 		this will also initialize trigger observations
+			// 3. bind scrollama event handlers (this can be chained like below)
+			scroller
+				.setup({
+					step: "#scrolly article .step",
+					offset: 0.33,
+					debug: false
+				})
+				.onStepEnter(handleStepEnter);
+		}
+
+		// kick things off
+		init();
+	</script>
+</body>
+
+</html>
