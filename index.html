@@ -43,13 +43,25 @@
 		}
 
 		figure img {
+			position: absolute;
+			top: 0;
+			left: 0;
 			width: 100%;
 			height: calc(100% - 3rem);
 			object-fit: contain;
-			transition: opacity 0.25s;
+			opacity: 0;
+			transition: opacity 0.6s ease;
+		}
+
+		figure img.show {
+			opacity: 1;
 		}
 
 		figure figcaption {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
 			font-size: 0.95rem;
 			color: #555;
 			text-align: center;
@@ -305,6 +317,7 @@
 			</article>
 
 			<figure>
+				<img class="show" src="images/flood_growth_australia.png" alt="">
 				<img src="images/flood_growth_australia.png" alt="">
 				<figcaption></figcaption>
 			</figure>
@@ -365,7 +378,14 @@
 
 			// update graphic based on step
 			var el = d3.select(response.element);
-			figure.select("img").attr("src", el.attr("data-img"));
+			var src = el.attr("data-img");
+			var shown = figure.select("img.show");
+			if (shown.attr("src") !== src) {
+				var hidden = figure.select("img:not(.show)");
+				hidden.attr("src", src);
+				hidden.classed("show", true);
+				shown.classed("show", false);
+			}
 			figure.select("figcaption").text(el.attr("data-caption"));
 		}
 
@@ -385,6 +405,12 @@
 				})
 				.onStepEnter(handleStepEnter);
 		}
+
+		// load every picture once at the start, so changing pictures is smooth
+		step.each(function () {
+			var picture = new Image();
+			picture.src = this.getAttribute("data-img");
+		});
 
 		// kick things off
 		init();
