@@ -264,55 +264,24 @@
 					<h3>Not much left to improve</h3>
 					<p>After the trend forecast, only 1% to 9% of the error of copying is left. That is why Model B can&#x27;t add much at 30 minutes. A fair test of the LSTM&#x27;s memory needs longer forecasts, 6 to 24 hours ahead.</p>
 				</div>
-				<div class="step part" data-img="images/longer_forecast_skill.png" data-caption="">
-					<h2>Part 4: Longer forecasts, up to 2.5 hours ahead</h2>
+				<div class="step part" data-img="images/rules_accuracy.png" data-caption="">
+					<h2>Part 4: How bad, and why</h2>
 				</div>
-				<div class="step" data-img="images/longer_forecast_skill.png" data-caption="Skill on a flood the model never saw.">
-					<h3>Simple models get most of the way</h3>
-					<p>Forecasting up to 2.5 hours ahead, a simple lookup table that only uses each square&#x27;s current depth and last change already scored 0.74 to 0.79, and a linear model 0.79 to 0.82. The best networks reached 0.81 to 0.87, only 0.05 to 0.08 more than the lookup table.</p>
-				</div>
-				<div class="step" data-img="images/memory_over_lead_time.png" data-caption="Australia to UK at 60 m.">
-					<h3>Does memory help?</h3>
-					<p>When both were trained for the same length, the ConvLSTM and a plain CNN scored the same. The ConvLSTM did lose skill more slowly as the forecast reached further ahead.</p>
-				</div>
-				<div class="step" data-img="images/what_models_use.png" data-caption="Local CNN on the UK flood.">
-					<h3>The models live on the recent depths</h3>
-					<p>Freeze the depth history and the skill drops to about zero. Remove the rain or the ground height and it barely moves.</p>
-				</div>
-				<div class="step" data-img="images/tuning.png" data-caption="Local CNN on the three experiments.">
-					<h3>What tuning changed</h3>
-					<p>A bigger batch with a higher learning rate made things slightly worse. Training longer helped a little. Anything under about 0.02 is within the noise from the random seed.</p>
-				</div>
-				<div class="step" data-img="images/predictions.png" data-caption="Orange means it held only in part.">
-					<h3>Six predictions, written down first</h3>
-					<p>Before the final runs we wrote down six predictions. Some held, some only partly, and one mostly failed.</p>
-				</div>
-				<div class="step" data-img="images/strict_split.png" data-caption="Skill when a block of time is hidden from training.">
-					<h3>Where models break</h3>
-					<p>When we hid a block of time from training, the plain CNN failed badly on Pakistan. Almost all its error came from six windows at the very start of the flood, which it had never seen. The ConvLSTM and the lookup table coped.</p>
-				</div>
-				<div class="step part" data-img="images/old_severity_label.png" data-caption="">
-					<h2>Part 5: How bad, and why</h2>
-				</div>
-				<div class="step" data-img="images/old_severity_label.png" data-caption="Red: tiles the old label calls severe. Blue: what is actually flooded.">
-					<h3>Fixing the severity label</h3>
-					<p>The first severity label used the deepest single square in a tile, so almost every tile came out &#x27;severe&#x27;. We replaced it with the share of normally dry land under more than 30 cm of water.</p>
+				<div class="step" data-img="images/rules_accuracy.png" data-caption="Capsule network alone, with the rules, and the rating read from the forecast map.">
+					<h3>Do the written rules help?</h3>
+					<p>The capsule network rates each tile None, Minor, Moderate or Severe, and three simple rules check its answer. No water now and none coming: no flood. Water rising while it rains: it can&#x27;t be less serious than now. The network and the forecast map disagree a lot: go with the forecast map. The rules made the ratings more accurate in all four floods, for example 63.5% to 70.7% in Mozambique. They changed only 2% to 7% of the answers, and every change comes with a reason. Reading the rating straight off the forecast map is right about 99% of the time, because the flood barely changes in 30 minutes.</p>
 				</div>
 				<div class="step" data-img="images/capsule_confusion.png" data-caption="Rows are the true rating, columns the network&#x27;s answer.">
 					<h3>The capsule network</h3>
-					<p>A capsule network rates each tile as None, Minor, Moderate or Severe for 30 minutes ahead. It got 50% to 87% right. That sounds fine until you notice the rating in 30 minutes is almost the same as the rating now.</p>
-				</div>
-				<div class="step" data-img="images/rules_accuracy.png" data-caption="Capsule network alone, with the rules, and the rating read from the forecast map.">
-					<h3>Rules that check the network</h3>
-					<p>Three written rules check the capsule network and give a reason for every decision. They raised the accuracy in all four floods. Reading the rating straight from the forecast map was right about 99% of the time.</p>
+					<p>Each table compares the true rating (rows) with the network&#x27;s answer (columns), so the dark diagonal is the correct answers. On its own it is right 60.9% of the time in Australia, 50.0% in the UK, 87.4% in Pakistan and 63.5% in Mozambique.</p>
 				</div>
 				<div class="step" data-img="images/grad_cam_forecaster.png" data-caption="Bright means important.">
 					<h3>Where the forecaster looks</h3>
-					<p>Grad-CAM colours the parts of the input that mattered most. For the forecaster the bright areas follow river channels, flood edges and rain blocks, the places where the water is actually changing.</p>
+					<p>Explainable AI means showing why a model gave its answer. Grad-CAM colours the parts of the input that mattered most, and bright means more important. For the forecaster the bright areas follow the river channels and flood edges, where the water is changing.</p>
 				</div>
 				<div class="step" data-img="images/grad_cam_capsule.png" data-caption="The four most flooded tiles of the UK and Mozambique.">
 					<h3>Where the capsule network looks</h3>
-					<p>For the capsule network the heat maps were weak and changed between training runs, so we treat them as pictures, not proof.</p>
+					<p>For the capsule network the heat maps were weak. Two training runs agreed only a little, so we show them as pictures, not proof.</p>
 				</div>
 			</article>
 
@@ -326,10 +295,11 @@
 		<section id="outro">
 			<h2>What we learned</h2>
 			<ul>
-				<li>At 30 minutes ahead, a simple trend forecast does almost all the work. Our second model matches it but doesn&#x27;t beat it.</li>
-				<li>Up to 2.5 hours ahead, a simple model of each square&#x27;s recent depths gets most of the way. The LSTM&#x27;s memory didn&#x27;t help at equal training.</li>
-				<li>The biggest lesson: always compare a model with simple forecasts. Our first model looked good until we did.</li>
-				<li>Next we want to forecast 6 to 24 hours ahead, where a trend should break down and memory could finally matter.</li>
+				<li>At 30 minutes ahead, a simple trend forecast with one fitted number does most of the work. Our second model matches it, but it does not beat it.</li>
+				<li>Up to 2.5 hours ahead, a simple lookup table that only uses each square&#x27;s current depth and last change already scores 0.74 to 0.79. The best networks score 0.81 to 0.87, and the LSTM&#x27;s memory did not help when the training length was equal.</li>
+				<li>Always compare a model with simple forecasts. Our first model looked good until we did.</li>
+				<li>Limits: we have only one flood per region, so only two truly independent train-and-test pairs. The floods are simulated, not real. The Colab results come from single runs.</li>
+				<li>What we want to do next: forecast 6 to 24 hours ahead, where a simple trend should get worse and the LSTM&#x27;s memory could really matter. We also want to rebuild the capsule network and Grad-CAM on Model B, and repeat the Colab runs with several random seeds.</li>
 			</ul>
 			<p class="credits">Anhad Mahajan (PRN 24070126031) and Aman Sumeet Saxena (PRN 24070126030), AIML A2. Data: FloodCastBench (Xu et al., Scientific Data, 2025).</p>
 		</section>
